@@ -31,7 +31,7 @@ main{flex:1;position:relative;min-width:0}#vp{position:absolute;inset:0}
 </style></head><body>
 <aside>
 <header><div class="logo">⛏ Minecraft <b>Recreator</b></div><div class="sub">Convierte videos y streams en construcciones de Minecraft</div><div id="warn" hidden></div></header>
-<div class="add"><input id="url" placeholder="Pega uno o varios links…"><button class="btn" id="addb">Añadir</button></div>
+<div class="add"><input id="url" placeholder="Pega uno o varios links…"><button class="btn ghost" id="pastb" title="Pegar desde el portapapeles">📋 Pegar</button><button class="btn" id="addb">Añadir</button></div>
 <div id="list"></div>
 <div class="glob">
 <label>Tamaño: <span class="val" id="sizev">96</span> bloques<input type="range" id="size" min="32" max="256" value="96"></label>
@@ -85,6 +85,10 @@ async function poll(){const r=await fetch('/api/state?log='+logn).then(r=>r.json
  const w=$('#warn');w.hidden=!r.miss.length;w.textContent='Faltan herramientas: '+r.miss.join(', ')+'. Ejecuta scripts/setup_tools.bat y deja la carpeta "tools" junto al programa.';
  renderList();load()}
 $('#addb').onclick=async()=>{const s=$('#url').value.trim().split(/\s+/).filter(Boolean);if(!s.length)return;const r=await api('add',{srcs:s});$('#url').value='';sel=r.ids.at(-1);await poll()};
+async function paste(){const r=await api('clipboard');let t=r.text||'';if(!t){try{t=await navigator.clipboard.readText()}catch(e){}}
+ if(t)$('#url').value=($('#url').value+' '+t).trim();else toast(r.error||'El portapapeles está vacío')}
+$('#pastb').onclick=paste;
+$('#url').addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='v'){e.preventDefault();paste()}});
 $('#url').onkeydown=e=>e.key==='Enter'&&$('#addb').click();
 for(const k of['size','fill']){$('#'+k).oninput=e=>$('#'+k+'v').textContent=e.target.value;$('#'+k).onchange=load}
 $('#exp').onclick=()=>api('export',{id:sel,size:+$('#size').value,fill:+$('#fill').value}).then(r=>toast(r.error||'Guardado en '+r.path));

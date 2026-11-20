@@ -101,6 +101,16 @@ class State:
                 s.n += 1; k = f"i{s.n}"; ids.append(k)
                 s.items[k] = s.new(k, src, PROJ / f"link{s.n}")
             return dict(ids=ids)
+        if name == "clipboard":
+            import subprocess
+            for cmd in (["powershell", "-NoProfile", "-Command", "Get-Clipboard -Raw"], ["pbpaste"], ["wl-paste"],
+                        ["xclip", "-o", "-selection", "clipboard"]):
+                try:
+                    t = subprocess.check_output(cmd, text=True, timeout=5, stderr=subprocess.DEVNULL,
+                                                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)).strip()
+                    return dict(text=t)
+                except Exception: continue
+            return dict(text="", error="No pude leer el portapapeles")
         if name == "remove": s.items.pop(d["id"], None)
         elif name == "update":
             it = s.items[d["id"]]
@@ -155,7 +165,7 @@ def main():
     url = f"http://127.0.0.1:{srv.server_address[1]}"
     try:
         import webview
-        webview.create_window("Minecraft Recreator", url, width=1380, height=860, background_color="#0b0d12")
+        webview.create_window("Minecraft Recreator", url, width=1380, height=860, background_color="#0b0d12", text_select=True)
         webview.start()
     except Exception:
         webbrowser.open(url); print("Abierto en", url, "(Ctrl+C para salir)")
